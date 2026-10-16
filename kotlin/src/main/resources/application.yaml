@@ -1,0 +1,9 @@
+ktor:
+  deployment:
+    port: 8080
+  application:
+    modules:
+      - com.jurisfutura.MonitoringKt.configureMonitoring
+      - com.jurisfutura.SerializationKt.configureSerialization
+      - com.jurisfutura.StatusPagesKt.configureStatusPages
+      - com.jurisfutura.RoutingKt.configureRouting

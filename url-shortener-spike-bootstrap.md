@@ -154,7 +154,10 @@ The Ktor project generator works like Spring Initializr: pick options in a form,
 5. Click **Download**, unzip so `build.gradle.kts` sits directly in `kotlin/`, then:
 
    ```bash
-   cd kotlin && chmod +x ./gradlew && ./gradlew build
+   cd kotlin
+   ./gradlew build
+   ./gradlew run
+   curl http://0.0.0.0:8080
    ```
 
 ### 4.3 Add the remaining dependencies

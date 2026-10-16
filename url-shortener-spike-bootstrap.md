@@ -141,15 +141,21 @@ gradle --version
 
 ### 4.2 Scaffold the project
 
-1. Go to **[start.ktor.io](https://start.ktor.io)**.
-2. Choose Kotlin, Gradle (Kotlin DSL), and the Netty engine.
-3. Add these plugins in the generator:
-   - Content Negotiation + kotlinx.serialization (JSON)
-   - Status Pages (central error → HTTP mapping)
-   - Call Logging
-   - Micrometer Metrics (Prometheus registry)
-   - Routing
-4. Download, unzip into `kotlin/`.
+The Ktor project generator works like Spring Initializr: pick options in a form, download a ready-to-build Gradle project.
+
+1. Open **[start.ktor.io](https://start.ktor.io)**.
+2. Set **Project artifact** (e.g. `com.jurisfutura.shortener`).
+3. Click **Configure** and set **Build System** to *Gradle* with *Kotlin* as the build script language (the generator may show these as two separate options), and **Engine** to *Netty*. Pick YAML for **Configuration**, or in-code if you prefer.
+4. Add these plugins (routing itself is built in):
+   - Content Negotiation + kotlinx.serialization: JSON request and response bodies
+   - Status Pages: one place to map the closed error type to HTTP status codes
+   - Call Logging: request logs
+   - Micrometer Metrics: metrics hooks; the Prometheus registry and the `/metrics` route are added by hand (see 4.3)
+5. Click **Download**, unzip so `build.gradle.kts` sits directly in `kotlin/`, then:
+
+   ```bash
+   cd kotlin && chmod +x ./gradlew && ./gradlew build
+   ```
 
 ### 4.3 Add the remaining dependencies
 
@@ -159,6 +165,7 @@ Add to the Gradle build (check each project's page for the latest stable version
 |---|---|
 | [Lettuce](https://lettuce.io) (`io.lettuce:lettuce-core`) + `kotlinx-coroutines-reactive` | Redis client with coroutine support |
 | [Arrow](https://arrow-kt.io) (`arrow-core`, optionally `arrow-fx-coroutines`) | `Either`, `Raise`, `Resource` for functional error handling |
+| `io.micrometer:micrometer-registry-prometheus` | Prometheus registry for the Micrometer Metrics plugin (needed for `/metrics`) |
 | Kotest or JUnit 5 | Unit tests |
 | [Testcontainers](https://testcontainers.com) | Integration tests against a real Redis |
 

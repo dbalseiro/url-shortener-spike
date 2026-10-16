@@ -1,0 +1,186 @@
+openapi: 3.0.3
+info:
+  title: URL Shortener
+  version: 0.1.0
+  description: Contract implemented by both the Kotlin and Swift services.
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /shorten:
+    post:
+      operationId: shorten
+      summary: Create a short link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShortenRequest"
+            example:
+              url: https://example.com/some/very/long/path?q=1
+              alias: my-link
+              ttlSeconds: 3600
+      responses:
+        "201":
+          description: Short link created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShortenResponse"
+              example:
+                code: my-link
+                shortUrl: http://localhost:8080/my-link
+                url: https://example.com/some/very/long/path?q=1
+                expiresAt: "2026-10-16T12:00:00Z"
+        "400":
+          $ref: "#/components/responses/InvalidUrl"
+        "409":
+          $ref: "#/components/responses/AliasTaken"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /{code}:
+    get:
+      operationId: redirect
+      summary: Redirect to the original URL
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9A-Za-z_-]{1,32}$"
+      responses:
+        "302":
+          description: Redirect to the original URL
+          headers:
+            Location:
+              required: true
+              schema:
+                type: string
+                format: uri
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /health:
+    get:
+      operationId: health
+      summary: Liveness/readiness check
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+
+  /metrics:
+    get:
+      operationId: metrics
+      summary: Prometheus-format metrics
+      responses:
+        "200":
+          description: Metrics in Prometheus text exposition format
+          content:
+            text/plain:
+              schema:
+                type: string
+
+components:
+  schemas:
+    ShortenRequest:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Absolute http or https URL.
+        alias:
+          type: string
+          pattern: "^[0-9A-Za-z_-]{3,32}$"
+          description: Optional custom code.
+        ttlSeconds:
+          type: integer
+          minimum: 1
+          description: Optional time to live. Omit for no expiry.
+
+    ShortenResponse:
+      type: object
+      required: [code, shortUrl, url]
+      properties:
+        code:
+          type: string
+        shortUrl:
+          type: string
+          format: uri
+        url:
+          type: string
+          format: uri
+        expiresAt:
+          type: string
+          format: date-time
+          description: Present only when a TTL was set.
+
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          enum: [InvalidUrl, AliasTaken, RateLimited, NotFound]
+          description: Closed set; maps 1:1 to the HTTP status.
+        message:
+          type: string
+
+  responses:
+    InvalidUrl:
+      description: URL or alias failed validation
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: InvalidUrl
+            message: url must be an absolute http(s) URL
+    AliasTaken:
+      description: Alias already in use
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: AliasTaken
+            message: alias 'my-link' is already in use
+    NotFound:
+      description: Code does not exist or has expired
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: NotFound
+            message: no link for code 'abc123'
+    RateLimited:
+      description: Client exceeded the rate limit
+      headers:
+        Retry-After:
+          description: Seconds until the client may retry
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: RateLimited
+            message: too many requests

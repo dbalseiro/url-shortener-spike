@@ -4,18 +4,6 @@ import arrow.core.Either
 import arrow.core.flatMap
 import arrow.core.raise.either
 
-// sealed makes "when" exhaustive
-sealed class Violation(val message: String) {
-    class InvalidUrl(message: String) : Violation(message)
-    class InvalidAlias(message: String) : Violation(message)
-    class InvalidTtl(message: String) : Violation(message)
-}
-
-data class InvalidInput(
-    val message: String,
-    val violations: List<Violation>
-)
-
 private fun validUrl(url: String): Either<Violation.InvalidUrl, Unit> =
     either {
         try {

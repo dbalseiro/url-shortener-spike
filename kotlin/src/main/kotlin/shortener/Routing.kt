@@ -1,5 +1,6 @@
 package com.jurisfutura.shortener
 
+import com.jurisfutura.shortener.shorten.shortenRouting
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -13,9 +14,6 @@ fun Application.configureRouting() {
             call.respondText("OK")
         }
 
-        post("/shorten")  {
-
-            call.respondText("URL shortened!")
-        }
+        shortenRouting()
     }
 }

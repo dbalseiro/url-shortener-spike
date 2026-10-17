@@ -1,4 +1,4 @@
-package com.jurisfutura
+package com.jurisfutura.shortener
 
 import io.ktor.server.application.*
 import io.ktor.server.metrics.micrometer.*
@@ -12,11 +12,10 @@ fun Application.configureMonitoring() {
     
     install(MicrometerMetrics) {
         registry = appMicrometerRegistry
-        // ...
     }
     
     routing {
-        get("/metrics-micrometer") {
+        get("/metrics") {
             call.respond(appMicrometerRegistry.scrape())
         }
     }

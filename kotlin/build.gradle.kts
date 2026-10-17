@@ -25,6 +25,12 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.micrometer.registryPrometheus)
 
+    implementation(ktorLibs.serialization.kotlinx.json)
+    implementation(libs.lettuce.core)
+    implementation(libs.kotlinx.coroutines.reactive)
+    implementation(libs.arrow.core)
+    implementation(libs.arrow.fx.coroutines)
+
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)
 }

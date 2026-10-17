@@ -150,7 +150,7 @@ The Ktor project generator works like Spring Initializr: pick options in a form,
    - Content Negotiation + kotlinx.serialization: JSON request and response bodies
    - Status Pages: one place to map the closed error type to HTTP status codes
    - Call Logging: request logs
-   - Micrometer Metrics: metrics hooks; the Prometheus registry and the `/metrics` route are added by hand (see 4.3)
+   - Micrometer Metrics: the generator also adds the Prometheus registry and a sample scrape route in `Monitoring.kt`
 5. Click **Download**, unzip so `build.gradle.kts` sits directly in `kotlin/`, then:
 
    ```bash
@@ -162,17 +162,120 @@ The Ktor project generator works like Spring Initializr: pick options in a form,
 
 ### 4.3 Add the remaining dependencies
 
-Add to the Gradle build (check each project's page for the latest stable version):
+The generator already added call logging, status pages, content negotiation, Micrometer and the Prometheus registry. What is still missing:
 
 | Library | Purpose |
 |---|---|
-| [Lettuce](https://lettuce.io) (`io.lettuce:lettuce-core`) + `kotlinx-coroutines-reactive` | Redis client with coroutine support |
-| [Arrow](https://arrow-kt.io) (`arrow-core`, optionally `arrow-fx-coroutines`) | `Either`, `Raise`, `Resource` for functional error handling |
-| `io.micrometer:micrometer-registry-prometheus` | Prometheus registry for the Micrometer Metrics plugin (needed for `/metrics`) |
-| Kotest or JUnit 5 | Unit tests |
-| [Testcontainers](https://testcontainers.com) | Integration tests against a real Redis |
+| kotlinx.serialization (compiler plugin + JSON) | `ContentNegotiation` is installed but has no JSON converter yet |
+| [Lettuce](https://github.com/redis/lettuce) + `kotlinx-coroutines-reactive` | Redis client with coroutine support |
+| [Arrow](https://arrow-kt.io) (`arrow-core`, `arrow-fx-coroutines`) | `Either`, `Raise`, `Resource` for functional error handling |
+| [Testcontainers](https://testcontainers.com) | Integration tests against a real Redis (needs Docker running) |
 
-Use a Gradle **version catalog** (`gradle/libs.versions.toml`) so versions live in one place.
+Tests already use `kotlin("test")` (JUnit under the hood), so Kotest is optional.
+
+**Quick way: one line per dependency in `kotlin/build.gradle.kts`.**
+Replace `<version>` with the latest stable version from each project's releases page or Maven Central, and record them in `docs/versions.md`.
+
+```kotlin
+plugins {
+    // ... existing entries ...
+    kotlin("plugin.serialization") version "2.4.0"   // same version as the Kotlin plugin
+}
+
+dependencies {
+    // ... existing entries ...
+    implementation(ktorLibs.serialization.kotlinx.json)   // Ktor module: no version needed
+    implementation("io.lettuce:lettuce-core:<version>")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:<version>")
+    implementation("io.arrow-kt:arrow-core:<version>")
+    implementation("io.arrow-kt:arrow-fx-coroutines:<version>")
+
+    testImplementation("org.testcontainers:testcontainers:<version>")
+}
+```
+
+Then reload Gradle (IDE sync or `./gradlew build`). This is enough for a one-week spike.
+
+**Recommended if the code will live on: a version catalog.**
+Versions live in one place, accessors are type-safe, and tools like Renovate can update them. The project has two catalogs:
+
+| Catalog | Defined in | Holds |
+|---|---|---|
+| `ktorLibs` | `kotlin/settings.gradle.kts` (`io.ktor:ktor-version-catalog`) | Every Ktor module. Versions are managed by Ktor, so never pin them. |
+| `libs` | `kotlin/gradle/libs.versions.toml` | Everything else (ours to pin). |
+
+*Catalog step 1: declare versions, libraries and the plugin in `kotlin/gradle/libs.versions.toml`.* Replace `<latest>` as above.
+
+```toml
+[versions]
+kotlin = "2.4.0"
+logback = "1.5.37"
+prometheus = "1.17.0"
+lettuce = "<latest>"
+coroutines = "<latest>"
+arrow = "<latest>"
+testcontainers = "<latest>"
+
+[libraries]
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+micrometer-registryPrometheus = { module = "io.micrometer:micrometer-registry-prometheus", version.ref = "prometheus" }
+lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
+kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "coroutines" }
+arrow-core = { module = "io.arrow-kt:arrow-core", version.ref = "arrow" }
+arrow-fxCoroutines = { module = "io.arrow-kt:arrow-fx-coroutines", version.ref = "arrow" }
+testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+```
+
+Keep the existing entries; only the `lettuce`, `coroutines`, `arrow`, `testcontainers` versions, the last five `[libraries]` lines and the `kotlin-serialization` plugin are new. Dashes in a key become dots in the accessor (`lettuce-core` becomes `libs.lettuce.core`).
+
+*Catalog step 2: use them in `kotlin/build.gradle.kts` (instead of the inline version above).*
+
+```kotlin
+plugins {
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)   // new
+    alias(ktorLibs.plugins.ktor)
+}
+
+dependencies {
+    // ... existing entries ...
+    implementation(ktorLibs.serialization.kotlinx.json)   // new
+    implementation(libs.lettuce.core)                      // new
+    implementation(libs.kotlinx.coroutines.reactive)       // new
+    implementation(libs.arrow.core)                        // new
+    implementation(libs.arrow.fxCoroutines)                // new
+
+    testImplementation(kotlin("test"))
+    testImplementation(ktorLibs.server.testHost)
+    testImplementation(libs.testcontainers)                // new
+}
+```
+
+**Either way, enable JSON in `kotlin/src/main/kotlin/Serialization.kt`.**
+
+```kotlin
+import io.ktor.serialization.kotlinx.json.json
+
+fun Application.configureSerialization() {
+    install(ContentNegotiation) {
+        json()
+    }
+}
+```
+
+**Align the metrics route with the contract.** `Monitoring.kt` serves the scrape data at `/metrics-micrometer`; change it to `/metrics` to match `contract/openapi.yaml`.
+
+**Check that everything resolves.**
+
+```bash
+cd kotlin
+./gradlew build
+./gradlew dependencies --configuration runtimeClasspath | grep -E "lettuce|arrow|kotlinx-serialization"
+```
 
 ### 4.4 Verify the bootstrap
 

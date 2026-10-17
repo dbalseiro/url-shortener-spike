@@ -15,4 +15,10 @@ class ServerTest {
         assertEquals(HttpStatusCode.OK, client.get("/").status)
     }
 
+    @Test
+    fun `test health endpoint`() = testApplication {
+        configure()
+        assertEquals(HttpStatusCode.OK, client.get("/health").status)
+    }
+
 }

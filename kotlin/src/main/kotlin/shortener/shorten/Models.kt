@@ -17,6 +17,7 @@ data class ShortenResponse(
     // date in milliseconds if present
     val expiresAt: Long? = null
 )
+
 // sealed makes "when" exhaustive
 @Serializable
 sealed class Violation() {
@@ -33,4 +34,3 @@ data class InvalidInput(
     val message: String,
     val violations: List<Violation>
 )
-

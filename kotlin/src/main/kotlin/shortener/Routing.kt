@@ -1,6 +1,5 @@
 package com.jurisfutura.shortener
 
-import com.jurisfutura.shortener.trivialdata.trivialDataRouting
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -8,14 +7,15 @@ import io.ktor.server.routing.*
 fun Application.configureRouting() {
     routing {
         get("/") {
-            call.respondText("Hello, World!")
+            call.respondText("URL Shortener Service is running!")
         }
         get("/health") {
             call.respondText("OK")
         }
 
-        route("/trivialdata") {
-            trivialDataRouting()
+        post("/shorten")  {
+
+            call.respondText("URL shortened!")
         }
     }
 }

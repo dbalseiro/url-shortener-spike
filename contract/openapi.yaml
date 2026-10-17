@@ -35,7 +35,7 @@ paths:
                 url: https://example.com/some/very/long/path?q=1
                 expiresAt: "2026-10-16T12:00:00Z"
         "400":
-          $ref: "#/components/responses/InvalidUrl"
+          $ref: "#/components/responses/InvalidInput"
         "409":
           $ref: "#/components/responses/AliasTaken"
         "429":
@@ -137,20 +137,32 @@ components:
       properties:
         error:
           type: string
-          enum: [InvalidUrl, AliasTaken, RateLimited, NotFound]
+          enum: [InvalidInput, AliasTaken, RateLimited, NotFound]
           description: Closed set; maps 1:1 to the HTTP status.
         message:
           type: string
 
+    InvalidInputError:
+      allOf:
+        - $ref: "#/components/schemas/Error"
+        - type: object
+          required: [reason]
+          properties:
+            reason:
+              type: string
+              enum: [InvalidUrl, InvalidAlias, InvalidTtl]
+              description: Which input was rejected. Only the first failure is reported.
+
   responses:
-    InvalidUrl:
-      description: URL or alias failed validation
+    InvalidInput:
+      description: Request failed validation
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/Error"
+            $ref: "#/components/schemas/InvalidInputError"
           example:
-            error: InvalidUrl
+            error: InvalidInput
+            reason: InvalidUrl
             message: url must be an absolute http(s) URL
     AliasTaken:
       description: Alias already in use

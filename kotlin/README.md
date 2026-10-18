@@ -25,9 +25,19 @@ To build or run the project, use one of the following tasks:
 
 | Task | Description |
 |------|-------------|
-| `./gradlew test`    | Run the tests     |
+| `./gradlew test`    | Run unit tests (no Redis required)     |
+| `./gradlew testIntegration` | Run integration tests (requires Redis) |
 | `./gradlew build`   | Build the project |
 | `./gradlew run`     | Run the server    |
+
+### Test Organization
+
+Tests are organized into two categories:
+
+- **Unit Tests** (`src/test/kotlin/unit/`): Fast tests that verify business logic without external dependencies. These can run in CI without requiring Redis or other services.
+- **Integration Tests** (`src/test/kotlin/integration/`): Tests that interact with the full application stack, including Redis and other services.
+
+Use `./gradlew test` for quick feedback during development, and `./gradlew testIntegration` to verify the complete system.
 
 If the server starts successfully, you'll see the following output:
 ```

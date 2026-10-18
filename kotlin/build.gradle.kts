@@ -18,49 +18,38 @@ kotlin {
 
 // Configuration of sourcesets to separate unit tests and integration tests
 sourceSets {
-    // WHY "by getting"?
+    // WHY "named"?
     // ==================
     // The "test" sourceset is BUILT-IN/STANDARD in Gradle
     // It's created automatically when you apply the kotlin-jvm plugin
-    // We use "by getting" to ACCESS and MODIFY this existing sourceset
-    // 
+    // We use "named" to ACCESS and CONFIGURE this existing sourceset
+    // "named" avoids creating unused variable references in the DSL
+    //
     // By default, Gradle's "test" sourceset looks for tests in:
     //   - src/test/kotlin/
     //   - src/test/java/
-    // 
-    // We're REPLACING those default directories with ONLY unit tests:
     //
-    // Note: @Suppress("UnusedVariable") is needed because in Gradle's DSL,
-    // the variable is assigned but never used after that. However, the delegation
-    // operator (by getting) performs the configuration as a SIDE EFFECT during
-    // assignment. This is a common Gradle idiom and is intentional.
-    @Suppress("UnusedVariable")
-    val test by getting {
+    // We're REPLACING those default directories with ONLY unit tests:
+    named("test") {
         // Override the default test directories to only include unit tests
         kotlin.setSrcDirs(setOf("src/test/kotlin/unit"))
     }
-    
-    // WHY "by creating"?
+
+    // WHY "create"?
     // ===================
     // The "integrationTest" sourceset DOES NOT EXIST by default in Gradle
     // It's a CUSTOM sourceset we need to define from scratch
-    // We use "by creating" to DECLARE and CONFIGURE a new sourceset
-    // 
+    // We use "create" to DECLARE and CONFIGURE a new sourceset
+    //
     // This new sourceset:
     // - Is completely separate from "test"
     // - Can have its own dependencies configuration
     // - Can have its own source directories
     // - Will be used by our custom "testIntegration" Gradle task
-    //
-    // Note: @Suppress("UnusedVariable") is needed because in Gradle's DSL,
-    // the variable is assigned but never used after that. However, the delegation
-    // operator (by creating) performs the configuration as a SIDE EFFECT during
-    // assignment. This is a common Gradle idiom and is intentional.
-    @Suppress("UnusedVariable")
-    val integrationTest by creating {
+    create("integrationTest") {
         // Integration tests are located in src/test/kotlin/integration/
         kotlin.setSrcDirs(setOf("src/test/kotlin/integration"))
-        
+
         // Integration tests need access to compiled code from main and test
         // so we add the output of both sourcesets to their classpath
         compileClasspath += sourceSets["main"].output + sourceSets["test"].output

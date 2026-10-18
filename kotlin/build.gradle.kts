@@ -86,6 +86,10 @@ dependencies {
         testImplementation(it)                    // For unit tests (src/test/kotlin/unit/)
         "integrationTestImplementation"(it)       // For integration tests (src/test/kotlin/integration/)
     }
+
+    // TestContainers for integration testing with real Redis containers
+    testImplementation(libs.testcontainers)
+    "integrationTestImplementation"(libs.testcontainers)
 }
 
 // Configuration of compilation dependencies for "integrationTestImplementation"

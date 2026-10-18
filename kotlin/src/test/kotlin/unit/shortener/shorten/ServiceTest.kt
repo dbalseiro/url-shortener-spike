@@ -1,5 +1,6 @@
 package com.jurisfutura.shortener.shorten
 
+import com.jurisfutura.shortener.ratelimit.RateLimiter
 import kotlin.test.*
 import kotlinx.coroutines.runBlocking
 
@@ -10,6 +11,7 @@ class ServiceTest {
     // (which runs before each test method) rather than at class declaration time.
     // This ensures each test gets a fresh instance of the mock and service.
     private lateinit var mockRepository: MockShortenRepository
+    private lateinit var mockRateLimiter: MockRateLimiter
     private lateinit var service: ShortenService
 
     // @BeforeTest runs before each test method. Here we initialize our mock and service.
@@ -17,7 +19,8 @@ class ServiceTest {
     @BeforeTest
     fun setUp() {
         mockRepository = MockShortenRepository()
-        service = ShortenService(mockRepository)
+        mockRateLimiter = MockRateLimiter()
+        service = ShortenService(mockRepository, mockRateLimiter)
     }
 
     @Test
@@ -27,7 +30,7 @@ class ServiceTest {
             val longUrl = "https://example.com/very/long/path"
             mockRepository.setGetResult(shortCode, longUrl)
 
-            val result = service.getOriginalUrl(shortCode)
+            val result = service.getOriginalUrl(shortCode, "127.0.0.1")
 
             result.fold(
                 ifLeft = { fail("Expected right but got: $it") },
@@ -42,10 +45,26 @@ class ServiceTest {
             val shortCode = "notfound"
             mockRepository.setGetResult(shortCode, null)
 
-            val result = service.getOriginalUrl(shortCode)
+            val result = service.getOriginalUrl(shortCode, "127.0.0.1")
 
             result.fold(
                 ifLeft = { assertIs<FetchError.NotFound>(it) },
+                ifRight = { fail("Expected left but got: $it") }
+            )
+        }
+    }
+
+    @Test
+    fun getOriginalUrlReturnsRateLimitedErrorWhenRateLimited() {
+        runBlocking {
+            val shortCode = "abc123"
+            mockRepository.setGetResult(shortCode, "https://example.com")
+            mockRateLimiter.setAllowRequest(false)
+
+            val result = service.getOriginalUrl(shortCode, "127.0.0.1")
+
+            result.fold(
+                ifLeft = { assertIs<FetchError.RateLimited>(it) },
                 ifRight = { fail("Expected left but got: $it") }
             )
         }
@@ -59,7 +78,7 @@ class ServiceTest {
                 alias = "my-link"
             )
 
-            val result = service.shortenUrl(request)
+            val result = service.shortenUrl(request, "127.0.0.1")
 
             result.fold(
                 ifLeft = { fail("Expected right but got: $it") },
@@ -77,7 +96,7 @@ class ServiceTest {
         runBlocking {
             val request = ShortenRequest(url = "https://example.com")
 
-            val result = service.shortenUrl(request)
+            val result = service.shortenUrl(request, "127.0.0.1")
 
             result.fold(
                 ifLeft = { fail("Expected right but got: $it") },
@@ -100,10 +119,26 @@ class ServiceTest {
                 alias = alias
             )
 
-            val result = service.shortenUrl(request)
+            val result = service.shortenUrl(request, "127.0.0.1")
 
             result.fold(
                 ifLeft = { assertIs<ShortenError.AliasTaken>(it) },
+                ifRight = { fail("Expected left but got: $it") }
+            )
+            assertFalse(mockRepository.wasSaveCalled())
+        }
+    }
+
+    @Test
+    fun shortenUrlReturnsRateLimitedErrorWhenRateLimited() {
+        runBlocking {
+            mockRateLimiter.setAllowRequest(false)
+            val request = ShortenRequest(url = "https://example.com")
+
+            val result = service.shortenUrl(request, "127.0.0.1")
+
+            result.fold(
+                ifLeft = { assertIs<ShortenError.RateLimited>(it) },
                 ifRight = { fail("Expected left but got: $it") }
             )
             assertFalse(mockRepository.wasSaveCalled())
@@ -120,7 +155,7 @@ class ServiceTest {
                 ttlSeconds = ttlSeconds
             )
 
-            val result = service.shortenUrl(request)
+            val result = service.shortenUrl(request, "127.0.0.1")
 
             result.fold(
                 ifLeft = { fail("Expected right but got: $it") },
@@ -138,7 +173,7 @@ class ServiceTest {
         runBlocking {
             val request = ShortenRequest(url = "not-a-valid-url")
 
-            val result = service.shortenUrl(request)
+            val result = service.shortenUrl(request, "127.0.0.1")
 
             result.fold(
                 ifLeft = { assertIs<ShortenError.InvalidInput>(it) },
@@ -174,3 +209,15 @@ class MockShortenRepository : ShortenRepository() {
 
     override suspend fun exists(shortCode: String): Boolean = existsResults[shortCode] ?: false
 }
+
+// Mock rate limiter for unit tests
+class MockRateLimiter : RateLimiter(100, 10.0) {
+    private var allowRequestResult = true
+
+    fun setAllowRequest(allow: Boolean) {
+        allowRequestResult = allow
+    }
+
+    override suspend fun allowRequest(clientIp: String): Boolean = allowRequestResult
+}
+

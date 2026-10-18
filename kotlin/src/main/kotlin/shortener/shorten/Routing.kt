@@ -10,6 +10,20 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
+/**
+ * Extracts the client IP address from the request.
+ * Handles X-Forwarded-For header for proxied requests.
+ */
+private fun getClientIp(headers: io.ktor.http.Headers): String {
+    // Check X-Forwarded-For header first (for proxies)
+    val forwarded = headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim()
+    if (!forwarded.isNullOrEmpty()) {
+        return forwarded
+    }
+    // Fallback to direct connection IP
+    return "unknown"
+}
+
 fun Route.shortenRouting(service: ShortenService) {
     route("/{code}") {
         get {
@@ -17,7 +31,9 @@ fun Route.shortenRouting(service: ShortenService) {
                 "Missing code",
                 status = HttpStatusCode.BadRequest
             )
-            service.getOriginalUrl(code).fold(
+            val clientIp = getClientIp(call.request.headers)
+            
+            service.getOriginalUrl(code, clientIp).fold(
                 ifRight = {
                     call.respondRedirect(url = it, permanent = true)
                 },
@@ -33,8 +49,9 @@ fun Route.shortenRouting(service: ShortenService) {
     }
     route("/shorten") {
         post {
+            val clientIp = getClientIp(call.request.headers)
             val request = call.receive<ShortenRequest>()
-            val response = service.shortenUrl(request)
+            val response = service.shortenUrl(request, clientIp)
             response.fold(
                 ifRight = {
                     call.respond(status = HttpStatusCode.OK, it)

@@ -18,9 +18,22 @@ data class ShortenResponse(
     val expiresAt: Long? = null
 )
 
+@Serializable
+sealed class ShortenError {
+    @Serializable
+    data class InvalidInput(
+        val message: String,
+        val violations: List<Violation>
+    ) : ShortenError()
+    @Serializable
+    data class AliasTaken(val message: String) : ShortenError()
+    @Serializable
+    data class RateLimited(val message: String) : ShortenError()
+}
+
 // sealed makes "when" exhaustive
 @Serializable
-sealed class Violation() {
+sealed class Violation {
     @Serializable
     data class InvalidUrl(val message: String) : Violation()
     @Serializable
@@ -29,8 +42,3 @@ sealed class Violation() {
     data class InvalidTtl(val message: String) : Violation()
 }
 
-@Serializable
-data class InvalidInput(
-    val message: String,
-    val violations: List<Violation>
-)

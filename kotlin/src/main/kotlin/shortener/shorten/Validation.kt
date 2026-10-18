@@ -4,17 +4,16 @@ import arrow.core.Either
 import arrow.core.raise.context.ensure
 import arrow.core.raise.either
 
-private fun validUrl(url: String): Either<Violation.InvalidUrl, Unit> =
-    either {
-        try {
-            java.net.URI(url).toURL()
-        } catch (e: Exception) {
-            raise(Violation.InvalidUrl("Invalid URL: ${e.message}"))
-        }
-        ensure(url.startsWith("http://") || url.startsWith("https://")) {
-            Violation.InvalidUrl("URL must start with http:// or https://")
-        }
+private fun validUrl(url: String): Either<Violation.InvalidUrl, Unit> = either {
+    try {
+        java.net.URI(url).toURL()
+    } catch (e: Exception) {
+        raise(Violation.InvalidUrl("Invalid URL: ${e.message}"))
     }
+    ensure(url.startsWith("http://") || url.startsWith("https://")) {
+        Violation.InvalidUrl("URL must start with http:// or https://")
+    }
+}
 
 private fun validAlias(alias: String?): Either<Violation, Unit> = either {
     alias?.let {
@@ -45,17 +44,20 @@ private fun validTtl(ttl: Int?): Either<Violation, Unit> = either {
     }
 }
 
-fun ShortenRequest.validate(): Either<InvalidInput, ShortenRequest> {
+fun ShortenRequest.validate(): Either<ShortenError.InvalidInput, ShortenRequest> {
     val violations = listOf(
         validUrl(url),
         validAlias(alias),
         validTtl(ttlSeconds),
-    ).fold(listOf<Violation>()) { acc, e ->
-        e.fold({ acc + it }, { acc })
+    ).fold(initial = listOf<Violation>()) { acc, e ->
+        e.fold(
+            ifLeft = { acc + it },
+            ifRight = { acc }
+        )
     }
     return either {
         ensure(violations.isEmpty()) {
-            InvalidInput("Invalid input", violations)
+            ShortenError.InvalidInput("Invalid input", violations)
         }
         // it's another "this" because we are in a different scope, the "this" of
         // the either block is not the same as the "this" of the validate function

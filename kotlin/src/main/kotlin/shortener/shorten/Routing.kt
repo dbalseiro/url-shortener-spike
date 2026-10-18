@@ -7,17 +7,22 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
-fun Route.shortenRouting() {
+fun Route.shortenRouting(service: ShortenService) {
     route("/shorten") {
         post {
             val request = call.receive<ShortenRequest>()
-            val result = request.validate()
-            result.fold(
+            val response = service.shortenUrl(request)
+            response.fold(
                 ifRight = {
-                    call.respond(HttpStatusCode.Created)
+                    call.respond(status = HttpStatusCode.OK, it)
                 },
                 ifLeft = {
-                    call.respond(HttpStatusCode.BadRequest, it)
+                    val status = when (it) {
+                        is ShortenError.InvalidInput -> HttpStatusCode.BadRequest
+                        is ShortenError.AliasTaken -> HttpStatusCode.Conflict
+                        is ShortenError.RateLimited -> HttpStatusCode.TooManyRequests
+                    }
+                    call.respond(status, message = it)
                 }
             )
         }

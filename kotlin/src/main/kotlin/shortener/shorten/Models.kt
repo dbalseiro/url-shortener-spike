@@ -19,6 +19,14 @@ data class ShortenResponse(
 )
 
 @Serializable
+sealed class FetchError {
+    @Serializable
+    data class NotFound(val message: String) : FetchError()
+    @Serializable
+    data class RateLimited(val message: String) : FetchError()
+}
+
+@Serializable
 sealed class ShortenError {
     @Serializable
     data class InvalidInput(

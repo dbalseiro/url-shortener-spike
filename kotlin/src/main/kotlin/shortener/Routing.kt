@@ -1,6 +1,7 @@
 package com.jurisfutura.shortener
 
 import com.jurisfutura.shortener.shorten.ShortenDependencies
+import com.jurisfutura.shortener.shorten.ShortenRepository
 import com.jurisfutura.shortener.shorten.ShortenService
 import com.jurisfutura.shortener.shorten.shortenRouting
 import io.ktor.server.application.*
@@ -13,7 +14,8 @@ object ProdShortenDependencies : ShortenDependencies {
     // ShortenService instance until it is actually needed.
     // If the service is accessed from multiple threads, care
     // must be taken to ensure thread safety during initialization.
-    override val service by lazy { ShortenService() }
+    override val repository by lazy { ShortenRepository() }
+    override val service by lazy { ShortenService(repository) }
 }
 
 fun Application.configureRouting() {

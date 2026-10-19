@@ -4,37 +4,19 @@ import com.jurisfutura.shortener.RateLimiter
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.plugins.origin
 import io.ktor.server.request.receive
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondRedirect
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.post
-import io.ktor.server.routing.route
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
 
 
-/**
- * Extracts the client IP address from the request.
- * Handles X-Forwarded-For header for proxied requests.
- */
-private fun getClientIp(headers: io.ktor.http.Headers): String {
-    // Check X-Forwarded-For header first (for proxies)
-    val forwarded = headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim()
-    if (!forwarded.isNullOrEmpty()) {
-        return forwarded
-    }
-    // Fallback to direct connection IP
-    return "unknown"
-}
-
-fun Route.shortenRouting(service: ShortenService, rateLimiter: RateLimiter) {
+fun Route.shortenRouting(service: ShortenService) {
     route("/{code}") {
         get {
             val shortCode = call.parameters["code"] ?: return@get call.respondText(
                 "Missing code",
                 status = HttpStatusCode.BadRequest
             )
-            service.getOriginalUrl(shortCode, call.request.origin.remoteHost).fold(
+            val clientIp = call.request.origin.remoteHost
+            service.getOriginalUrl(shortCode, clientIp).fold(
                 ifRight = {
                     call.respondRedirect(url = it, permanent = true)
                 },
@@ -51,7 +33,8 @@ fun Route.shortenRouting(service: ShortenService, rateLimiter: RateLimiter) {
     route("/shorten") {
         post {
             val request = call.receive<ShortenRequest>()
-            val response = service.shortenUrl(request)
+            val clientIp = call.request.origin.remoteHost
+            val response = service.shortenUrl(request, clientIp)
             response.fold(
                 ifRight = {
                     call.respond(status = HttpStatusCode.OK, it)

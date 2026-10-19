@@ -64,6 +64,7 @@ dependencies {
     implementation(ktorLibs.server.metrics.micrometer)
     implementation(ktorLibs.server.netty)
     implementation(ktorLibs.server.statusPages)
+    implementation(ktorLibs.server.forwardedHeader)
     implementation(libs.logback.classic)
     implementation(libs.micrometer.registryPrometheus)
 

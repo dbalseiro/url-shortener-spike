@@ -1,9 +1,6 @@
 package com.jurisfutura.shortener
 
-import com.jurisfutura.shortener.shorten.ShortenDependencies
-import com.jurisfutura.shortener.shorten.ShortenRepository
-import com.jurisfutura.shortener.shorten.ShortenService
-import com.jurisfutura.shortener.shorten.shortenRouting
+import com.jurisfutura.shortener.shorten.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -34,6 +31,6 @@ fun Application.configureRouting() {
             call.respondText("OK")
         }
 
-        shortenRouting(deps.service, deps.rateLimiter)
+        shortenRouting(deps.service)
     }
 }

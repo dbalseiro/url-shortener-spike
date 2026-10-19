@@ -7,18 +7,25 @@ import com.jurisfutura.shortener.shorten.shortenRouting
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.plugins.forwardedheaders.XForwardedHeaders
 
 
-object ProdShortenDependencies : ShortenDependencies {
+class ProdShortenDependencies(private val app: Application) : ShortenDependencies {
     // Lazy initialization is used here to defer the creation of the
     // ShortenService instance until it is actually needed.
     // If the service is accessed from multiple threads, care
     // must be taken to ensure thread safety during initialization.
     override val repository by lazy { ShortenRepository() }
-    override val service by lazy { ShortenService(repository) }
+    override val rateLimiter by lazy {
+        val cfg = RateLimiterCfg.fromConfig(app.environment.config.toMap())
+        RateLimiter(cfg)
+    }
+    override val service by lazy { ShortenService(repository, rateLimiter) }
 }
 
 fun Application.configureRouting() {
+    install(XForwardedHeaders)
+    val deps = ProdShortenDependencies(this)
     routing {
         get("/") {
             call.respondText("URL Shortener Service is running!")
@@ -27,6 +34,6 @@ fun Application.configureRouting() {
             call.respondText("OK")
         }
 
-        shortenRouting(ProdShortenDependencies.service)
+        shortenRouting(deps.service, deps.rateLimiter)
     }
 }

@@ -1,6 +1,8 @@
 package com.jurisfutura.shortener.shorten
 
+import com.jurisfutura.shortener.RateLimiter
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.plugins.origin
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondRedirect
@@ -10,14 +12,29 @@ import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 
-fun Route.shortenRouting(service: ShortenService) {
+
+/**
+ * Extracts the client IP address from the request.
+ * Handles X-Forwarded-For header for proxied requests.
+ */
+private fun getClientIp(headers: io.ktor.http.Headers): String {
+    // Check X-Forwarded-For header first (for proxies)
+    val forwarded = headers["X-Forwarded-For"]?.split(",")?.firstOrNull()?.trim()
+    if (!forwarded.isNullOrEmpty()) {
+        return forwarded
+    }
+    // Fallback to direct connection IP
+    return "unknown"
+}
+
+fun Route.shortenRouting(service: ShortenService, rateLimiter: RateLimiter) {
     route("/{code}") {
         get {
-            val code = call.parameters["code"] ?: return@get call.respondText(
+            val shortCode = call.parameters["code"] ?: return@get call.respondText(
                 "Missing code",
                 status = HttpStatusCode.BadRequest
             )
-            service.getOriginalUrl(code).fold(
+            service.getOriginalUrl(shortCode, call.request.origin.remoteHost).fold(
                 ifRight = {
                     call.respondRedirect(url = it, permanent = true)
                 },

@@ -1,5 +1,7 @@
 package com.jurisfutura.shortener.shorten
 
+import com.jurisfutura.shortener.RateLimiter
+import com.jurisfutura.shortener.RateLimiterCfg
 import kotlin.test.*
 import kotlinx.coroutines.runBlocking
 
@@ -10,6 +12,7 @@ class ServiceTest {
     // (which runs before each test method) rather than at class declaration time.
     // This ensures each test gets a fresh instance of the mock and service.
     private lateinit var mockRepository: MockShortenRepository
+    private lateinit var mockRateLimiter: MockRateLimiter
     private lateinit var service: ShortenService
 
     // @BeforeTest runs before each test method. Here we initialize our mock and service.
@@ -17,7 +20,8 @@ class ServiceTest {
     @BeforeTest
     fun setUp() {
         mockRepository = MockShortenRepository()
-        service = ShortenService(mockRepository)
+        mockRateLimiter = MockRateLimiter()
+        service = ShortenService(mockRepository, mockRateLimiter)
     }
 
     @Test
@@ -173,4 +177,15 @@ class MockShortenRepository : ShortenRepository() {
     override suspend fun get(shortCode: String): String? = storage[shortCode]
 
     override suspend fun exists(shortCode: String): Boolean = existsResults[shortCode] ?: false
+}
+
+// Simple mock rate limiter without external dependencies
+class MockRateLimiter : RateLimiter(RateLimiterCfg()) {
+    private var isRateLimited = false
+
+    fun setRateLimited(rateLimited: Boolean) {
+        isRateLimited = rateLimited
+    }
+
+    override suspend fun isRateLimited(clientId: String): Boolean = isRateLimited
 }

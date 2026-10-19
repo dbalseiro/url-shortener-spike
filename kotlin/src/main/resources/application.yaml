@@ -8,3 +8,8 @@ ktor:
       - com.jurisfutura.shortener.StatusPagesKt.configureStatusPages
       - com.jurisfutura.shortener.RoutingKt.configureRouting
       - com.jurisfutura.shortener.redis.RedisPluginKt.configureRedis
+rateLimit:
+  tokensPerSecond: 5
+  maxTokens: 10
+  windowSeconds: 60
+

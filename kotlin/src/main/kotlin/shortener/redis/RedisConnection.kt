@@ -13,10 +13,19 @@ object RedisConnection {
     @Volatile
     private var connection: StatefulRedisConnection<String, String>? = null
 
-    fun getInstance(): StatefulRedisConnection<String, String> =
-        connection ?: synchronized(this) {
-            connection ?: createConnection()
+    fun getInstance(): StatefulRedisConnection<String, String> {
+        synchronized(this) {
+            // Check if connection is still valid
+            if (connection != null && !connection!!.isOpen) {
+                connection?.close()
+                client?.shutdown()
+                connection = null
+                client = null
+            }
+            
+            return connection ?: createConnection()
         }
+    }
 
     private fun createConnection(): StatefulRedisConnection<String, String> {
         val redisUrl = System.getenv("REDIS_URL") 
@@ -28,7 +37,13 @@ object RedisConnection {
     }
 
     fun shutdown() {
-        connection?.close()
-        client?.shutdown()
+        // In integration tests, don't actually shutdown - just close the connection
+        // The container will be managed by the test fixture
+        if (System.getProperty("REDIS_TEST_MODE") != "true") {
+            connection?.close()
+            client?.shutdown()
+            connection = null
+            client = null
+        }
     }
 }

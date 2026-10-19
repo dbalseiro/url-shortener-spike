@@ -5,17 +5,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.testing.testApplication
 import kotlin.test.*
 
-class ServerTest {
-
-    @BeforeTest
-    fun setup() {
-        RedisContainer.start()
-    }
-
-    @AfterTest
-    fun teardown() {
-        RedisContainer.stop()
-    }
+class ServerTest : IntegrationTestBase() {
 
     @Test
     fun `test root endpoint`() = testApplication {

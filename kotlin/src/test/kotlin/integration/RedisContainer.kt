@@ -12,12 +12,9 @@ import org.testcontainers.utility.DockerImageName
  */
 object RedisContainer {
     private var container: GenericContainer<*>? = null
+    private var redisUrl: String? = null
 
     fun start() {
-        if (container?.isRunning == true) {
-            return
-        }
-
         val redisContainer = GenericContainer(DockerImageName.parse("redis:7-alpine"))
             .withExposedPorts(6379)
 
@@ -25,18 +22,18 @@ object RedisContainer {
         container = redisContainer
 
         val port = redisContainer.getMappedPort(6379)
-        val redisUrl = "redis://localhost:$port"
+        redisUrl = "redis://localhost:$port"
         System.setProperty("REDIS_URL", redisUrl)
         
-        // Wait until Redis is actually ready
         waitForRedis(redisUrl)
     }
 
-    private fun waitForRedis(redisUrl: String) {
+    private fun waitForRedis(url: String?) {
+        if (url == null) return
         runBlocking {
             repeat(10) {
                 try {
-                    val client = RedisClient.create(redisUrl)
+                    val client = RedisClient.create(url)
                     val conn = client.connect()
                     conn.close()
                     client.shutdown()
@@ -49,8 +46,27 @@ object RedisContainer {
     }
 
     fun stop() {
-        container?.stop()
+        try {
+            container?.stop()
+            container?.close()
+        } catch (e: Exception) {
+            // Already stopped
+        }
         container = null
+        redisUrl = null
         System.clearProperty("REDIS_URL")
+    }
+
+    fun clear() {
+        val url = redisUrl ?: return
+        try {
+            val client = RedisClient.create(url)
+            val conn = client.connect()
+            conn.async().flushall()
+            conn.close()
+            client.shutdown()
+        } catch (e: Exception) {
+            // Redis not available
+        }
     }
 }

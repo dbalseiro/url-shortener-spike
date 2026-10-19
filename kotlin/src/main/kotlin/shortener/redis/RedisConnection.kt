@@ -19,7 +19,9 @@ object RedisConnection {
         }
 
     private fun createConnection(): StatefulRedisConnection<String, String> {
-        val redisUrl = System.getenv("REDIS_URL") ?: "redis://localhost:6379"
+        val redisUrl = System.getenv("REDIS_URL") 
+            ?: System.getProperty("REDIS_URL")
+            ?: "redis://localhost:6379"
         client = RedisClient.create(redisUrl)
         // !! is kinda unsafe, but we just created the client, so it should not be null here.
         return client!!.connect().also { connection = it }

@@ -154,7 +154,7 @@ class ServiceTest {
 }
 
 // Simple mock repository without external dependencies
-class MockShortenRepository : ShortenRepository() {
+class MockShortenRepository : ShortenRepository {
     private val storage = mutableMapOf<String, String?>()
     private val existsResults = mutableMapOf<String, Boolean>()
     private var saveWasCalled = false

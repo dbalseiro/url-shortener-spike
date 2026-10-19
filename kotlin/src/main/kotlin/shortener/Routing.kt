@@ -12,7 +12,7 @@ class ProdShortenDependencies(private val app: Application) : ShortenDependencie
     // ShortenService instance until it is actually needed.
     // If the service is accessed from multiple threads, care
     // must be taken to ensure thread safety during initialization.
-    override val repository by lazy { ShortenRepository() }
+    override val repository: ShortenRepository by lazy { ShortenRepositoryImpl() }
     override val rateLimiter by lazy {
         val cfg = RateLimiterCfg.fromConfig(app.environment.config.toMap())
         RateLimiter(cfg)

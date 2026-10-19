@@ -7,6 +7,16 @@ import kotlin.test.*
 
 class ServerTest {
 
+    @BeforeTest
+    fun setup() {
+        RedisContainer.start()
+    }
+
+    @AfterTest
+    fun teardown() {
+        RedisContainer.stop()
+    }
+
     @Test
     fun `test root endpoint`() = testApplication {
         // loads default configuration
@@ -22,3 +32,4 @@ class ServerTest {
     }
 
 }
+

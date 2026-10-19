@@ -37,7 +37,7 @@ fun Route.shortenRouting(service: ShortenService) {
             val response = service.shortenUrl(request, clientIp)
             response.fold(
                 ifRight = {
-                    call.respond(status = HttpStatusCode.OK, it)
+                    call.respond(status = HttpStatusCode.Created, it)
                 },
                 ifLeft = {
                     // this is exhaustive :tada:

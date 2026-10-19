@@ -78,6 +78,7 @@ dependencies {
     // using a list to avoid code duplication
     val testDeps = listOf(
         kotlin("test"),           // Kotlin testing framework
+        ktorLibs.client.contentNegotiation,
         ktorLibs.server.testHost  // Ktor test host to simulate HTTP server
     )
     

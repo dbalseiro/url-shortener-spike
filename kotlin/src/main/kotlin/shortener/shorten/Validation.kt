@@ -44,17 +44,20 @@ private fun validTtl(ttl: Int?): Either<Violation, Unit> = either {
     }
 }
 
-fun ShortenRequest.validate(): Either<ShortenError.InvalidInput, ShortenRequest> {
-    val violations = listOf(
-        validUrl(url),
-        validAlias(alias),
-        validTtl(ttlSeconds),
-    ).fold(initial = listOf<Violation>()) { acc, e ->
+fun <A>List<Either<A, Any>>.lefts(): List<A> =
+    this.fold(initial = listOf<A>()) { acc, e ->
         e.fold(
             ifLeft = { acc + it },
             ifRight = { acc }
         )
     }
+
+fun ShortenRequest.validate(): Either<ShortenError.InvalidInput, ShortenRequest> {
+    val violations = listOf(
+        validUrl(url),
+        validAlias(alias),
+        validTtl(ttlSeconds),
+    ).lefts()
     return either {
         ensure(violations.isEmpty()) {
             ShortenError.InvalidInput("Invalid input", violations)

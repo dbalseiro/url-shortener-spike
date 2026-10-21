@@ -64,5 +64,5 @@ data class RateLimiterCfg(
 }
 
 open class RateLimiter(cfg: RateLimiterCfg) {
-    open suspend fun isRateLimited(clientIp: String): Boolean = TODO("Not yet implemented")
+    open suspend fun isRateLimited(clientIp: String): Boolean = false
 }

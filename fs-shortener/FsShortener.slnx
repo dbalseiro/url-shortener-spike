@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FsShortener.fsproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FsShortener.Tests/FsShortener.Tests.fsproj" />
+  </Folder>
+</Solution>

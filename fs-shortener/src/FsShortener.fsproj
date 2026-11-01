@@ -4,9 +4,9 @@
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Compile Include="Health/Types.fs" />
-    <Compile Include="Health/Routes.hs.fs" />
+  <ItemGroup><Compile Include="Health/Types.fs" />
+    <Compile Include="Health/Routes.fs" />
+    <Compile Include="App.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 

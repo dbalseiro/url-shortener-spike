@@ -2,9 +2,10 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+      <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
 
-  <ItemGroup><Compile Include="Health/Types.fs" />
+  <ItemGroup><Compile Include="Shortener/Domain.fs" /><Compile Include="Health/Domain.fs" />
     <Compile Include="Health/Routes.fs" />
     <Compile Include="App.fs" />
     <Compile Include="Program.fs" />

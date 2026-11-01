@@ -1,0 +1,33 @@
+module FsShortener.Shortener.Domain
+
+type Violation =
+    | InvalidUrl of string
+    | InvalidAlias
+    | InvalidTTL
+
+type TryAgain = {
+    RetryAfter: int
+}
+
+type ShortenError =
+    | InvalidRequest of Violation list
+    | AliasTaken
+    | RateLimited of TryAgain
+    | NotFound
+
+type FetchError =
+    | NotFound
+    | RateLimited of TryAgain
+
+type ShortenRequest = {
+    Url: string
+    Alias: string option
+    TTL: int option
+}
+
+type ShortenResponse = {
+    Code: string
+    ShortUrl: string
+    OriginalUrl: string
+    ExpiresAt: System.DateTime option
+}

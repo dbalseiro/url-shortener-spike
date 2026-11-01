@@ -142,28 +142,44 @@ components:
         message:
           type: string
 
+    Violation:
+      type: object
+      required: [type, message]
+      properties:
+        type:
+          type: string
+          enum: [InvalidUrl, InvalidAlias, InvalidTtl]
+        message:
+          type: string
+
     InvalidInputError:
       allOf:
         - $ref: "#/components/schemas/Error"
         - type: object
-          required: [reason]
+          required: [violations]
           properties:
-            reason:
-              type: string
-              enum: [InvalidUrl, InvalidAlias, InvalidTtl]
-              description: Which input was rejected. Only the first failure is reported.
+            violations:
+              type: array
+              minItems: 1
+              description: Every validation failure found in the request.
+              items:
+                $ref: "#/components/schemas/Violation"
 
   responses:
     InvalidInput:
-      description: Request failed validation
+      description: Request failed validation; lists every violation found
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/InvalidInputError"
           example:
             error: InvalidInput
-            reason: InvalidUrl
-            message: url must be an absolute http(s) URL
+            message: request failed validation
+            violations:
+              - type: InvalidUrl
+                message: url must be an absolute http(s) URL
+              - type: InvalidTtl
+                message: ttlSeconds must be at least 1
     AliasTaken:
       description: Alias already in use
       content:

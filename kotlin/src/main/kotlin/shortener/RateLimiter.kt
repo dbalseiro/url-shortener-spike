@@ -1,5 +1,10 @@
 package com.jurisfutura.shortener
 
+import com.jurisfutura.shortener.redis.RedisConnection
+import io.lettuce.core.ScriptOutputType
+import java.io.File
+import kotlinx.coroutines.future.await
+
 /**
  * Thread-safe rate limiter using Redis token bucket algorithm.
  *
@@ -63,6 +68,24 @@ data class RateLimiterCfg(
     }
 }
 
-open class RateLimiter(cfg: RateLimiterCfg) {
-    open suspend fun isRateLimited(clientIp: String): Boolean = false
+open class RateLimiter(
+    private val cfg: RateLimiterCfg
+):  {
+    private val redis by lazy { RedisConnection.getInstance().async() }
+    open suspend fun isRateLimited(clientIp: String): Boolean {
+        val now = System.currentTimeMillis()
+        val tokensKey = "rate-limit:tokens:$clientIp"
+        val timestampKey = "rate-limit:timestamp:$clientIp"
+        val script = File("../rate_limiter.lua").readText()
+        val result = redis.eval<Long>(
+            script,
+            ScriptOutputType.INTEGER,
+            arrayOf(tokensKey, timestampKey),
+            this.cfg.maxTokens.toString(),
+            cfg.tokensPerSecond.toString(),
+            now.toString(),
+            cfg.windowSeconds.toString()
+        ).await()
+        return result == 0L
+    }
 }

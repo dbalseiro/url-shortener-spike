@@ -21,7 +21,7 @@
     <ProjectReference Include="..\..\src\FsShortener.fsproj" />
   </ItemGroup>
 
-  <ItemGroup><Compile Include="Shortener/MemoryTest.fs" /><Compile Include="Shortener/MemoryServerTest.fs" /><Compile Include="Shortener/EncodingTest.fs" /><Compile Include="Shortener/ValidationTest.fs" />
+  <ItemGroup><Compile Include="Shortener/MemoryTest.fs" /><Compile Include="Shortener/MemoryServerTest.fs" /><Compile Include="Shortener/EncodingTest.fs" /><Compile Include="Shortener/ValidationTest.fs" /><Compile Include="Shortener/DtoTest.fs" />
     <Compile Include="Integration/TestApp.fs" />
     <Compile Include="Integration/Health.fs" />
     <Compile Include="Health/TypesTest.fs" />

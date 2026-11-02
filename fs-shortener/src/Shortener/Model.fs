@@ -8,13 +8,15 @@ type Link = {
     Expiration: int option
 }
 
-type Error = {
+type StorageError = {
     Message: string
     ErrorCode: int
 }
 
+let storageErrorToString (err: StorageError) = sprintf "Error: %s (Code: %d)" err.Message err.ErrorCode
+
 type LinkStore = {
-    Save: Link -> Task<Result<unit, Error>>
-    Get: string -> Task<Result<Link option, Error>>
-    Exists: string -> Task<Result<bool, Error>>
+    Save: Link -> Task<Result<unit, StorageError>>
+    Get: string -> Task<Result<Link option, StorageError>>
+    Exists: string -> Task<Result<bool, StorageError>>
 }

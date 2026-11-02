@@ -56,26 +56,3 @@ let ``generateCode returns a non-empty alphanumeric code`` () =
 let ``generateCode decodes to a value within the Int32 range`` () =
     let value = generateCode () |> base62Decode
     Assert.InRange(value, 0L, int64 Int32.MaxValue)
-
-// mapErrorToStatus
-[<Fact>]
-let ``InvalidRequest maps to 400 with json body`` () =
-    let status, headers, body =
-        mapErrorToStatus (InvalidRequest [ InvalidUrl "bad" ])
-    Assert.Equal(HttpStatusCode.BadRequest, status)
-    Assert.Contains(("Content-Type", "application/json"), headers)
-    Assert.Equal<obj>("Invalid request", body.GetType().GetProperty("message").GetValue body)
-
-[<Fact>]
-let ``AliasTaken maps to 409`` () =
-    let status, headers, body = mapErrorToStatus AliasTaken
-    Assert.Equal(HttpStatusCode.Conflict, status)
-    Assert.Contains(("Content-Type", "text/plain"), headers)
-    Assert.Equal<obj>("Alias already taken", body)
-
-[<Fact>]
-let ``RateLimited maps to 429 with Retry-After`` () =
-    let status, headers, _ =
-        mapErrorToStatus (ShortenError.RateLimited { RetryAfter = 30 })
-    Assert.Equal(HttpStatusCode.TooManyRequests, status)
-    Assert.Contains(("Retry-After", "30"), headers)

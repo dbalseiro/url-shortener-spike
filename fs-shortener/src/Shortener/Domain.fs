@@ -11,7 +11,8 @@ type TryAgain = {
 
 type ShortenError =
     | InvalidRequest of Violation list
-    | AliasTaken
+    | StorageError of string
+    | AliasTaken of string
     | RateLimited of TryAgain
 
 type FetchError =
@@ -26,7 +27,6 @@ type ShortenRequest = {
 
 type ShortenResponse = {
     Code: string
-    ShortUrl: string
     OriginalUrl: string
     ExpiresAt: System.DateTime option
 }

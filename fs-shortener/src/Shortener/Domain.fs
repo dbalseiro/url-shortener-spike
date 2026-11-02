@@ -27,6 +27,7 @@ type ShortenRequest = {
 
 type ShortenResponse = {
     Code: string
+    ShortUrl: string
     OriginalUrl: string
     ExpiresAt: System.DateTime option
 }

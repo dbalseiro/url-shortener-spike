@@ -37,14 +37,27 @@ type ShortenResponseDto = {
     [<JsonPropertyName("url")>]
     OriginalUrl: string
 
+    [<JsonPropertyName("shortUrl")>]
+    ShortUrl: string
+
     [<JsonPropertyName("expiresAt")>]
     ExpiresAt: Nullable<int32>
+}
+
+[<CLIMutable>]
+type ViolationDto = {
+    [<JsonPropertyName("message")>]
+    Message: string
+
+    [<JsonPropertyName("type")>]
+    Type: string
 }
 
 module Response = 
     let toDomain (dto: ShortenResponseDto) : Domain.ShortenResponse = {
         Domain.Code = dto.Code
         Domain.OriginalUrl = dto.OriginalUrl
+        Domain.ShortUrl = dto.ShortUrl
         Domain.ExpiresAt = 
             Option.ofNullable dto.ExpiresAt 
             |> Option.map (fun x -> DateTimeOffset.FromUnixTimeSeconds(int64 x).UtcDateTime)
@@ -53,7 +66,24 @@ module Response =
     let ofDomain (domain: Domain.ShortenResponse) : ShortenResponseDto = {
         Code = domain.Code
         OriginalUrl = domain.OriginalUrl
+        ShortUrl = domain.ShortUrl
         ExpiresAt = match domain.ExpiresAt with 
                     | Some dt -> Nullable (int (DateTimeOffset(dt, TimeSpan.Zero).ToUnixTimeSeconds())) 
                     | None -> Nullable()
     }
+
+
+    let violationDto(violation: Domain.Violation) : ViolationDto =
+        match violation with
+        | Domain.InvalidUrl message -> {
+                Message = "Invalid URL: " + message
+                Type = "InvalidUrl"
+            }
+        | Domain.InvalidAlias -> {
+                Message = "Invalid alias"
+                Type = "InvalidAlias"
+            }
+        | Domain.InvalidTTL -> {
+                Message = "Invalid TTL"
+                Type = "InvalidTTL"
+            }

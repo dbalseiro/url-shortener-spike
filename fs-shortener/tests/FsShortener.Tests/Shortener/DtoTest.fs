@@ -36,6 +36,7 @@ type Generators() =
             return {
                 Code = code
                 OriginalUrl = url
+                ShortUrl = "http://short.url/" + code
                 ExpiresAt = expiresAt
             }
         } |> Arb.fromGen

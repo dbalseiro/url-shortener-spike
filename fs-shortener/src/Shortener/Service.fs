@@ -4,6 +4,7 @@ open System.Threading.Tasks
 
 let shorten 
     (store: Model.LinkStore) 
+    (baseUrl: string)
     (request: Domain.ShortenRequest)
     : Task<Result<Domain.ShortenResponse, Domain.ShortenError>> = task {
         match Validation.validateRequest request with
@@ -21,6 +22,7 @@ let shorten
                 | Error err -> return Error (Domain.StorageError (Model.storageErrorToString err))
                 | Ok () -> return Ok { 
                     Domain.Code = alias
+                    Domain.ShortUrl = baseUrl.TrimEnd('/') + "/" + alias
                     Domain.OriginalUrl = request.Url
                     Domain.ExpiresAt = request.TTL |> Option.map (fun ttl -> System.DateTime.UtcNow.AddSeconds (float ttl))
                 }

@@ -44,7 +44,7 @@ let private createAliasConflictStore (alias: string) (url: string) : LinkStore =
 let ``shorten with valid HTTPS URL returns Ok`` () = task {
     let store = createSuccessStore ()
     let request = createRequest "https://example.com" None None
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Ok response ->
         Assert.NotNull(response.Code)
@@ -56,7 +56,7 @@ let ``shorten with valid HTTPS URL returns Ok`` () = task {
 let ``shorten with custom alias uses it`` () = task {
     let store = createSuccessStore ()
     let request = createRequest "https://example.com" (Some "myalias") None
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Ok response ->
         Assert.Equal("myalias", response.Code)
@@ -67,7 +67,7 @@ let ``shorten with custom alias uses it`` () = task {
 let ``shorten with TTL sets expiration`` () = task {
     let store = createSuccessStore ()
     let request = createRequest "https://example.com" None (Some 3600)
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Ok response ->
         Assert.NotNull(response.ExpiresAt)
@@ -77,8 +77,8 @@ let ``shorten with TTL sets expiration`` () = task {
 [<Fact>]
 let ``shorten generates different codes`` () = task {
     let store = createSuccessStore ()
-    let! r1 = Service.shorten store (createRequest "https://example1.com" None None)
-    let! r2 = Service.shorten store (createRequest "https://example2.com" None None)
+    let! r1 = Service.shorten store "http://localhost:8080" (createRequest "https://example1.com" None None)
+    let! r2 = Service.shorten store "http://localhost:8080" (createRequest "https://example2.com" None None)
     match r1, r2 with
     | Ok resp1, Ok resp2 -> Assert.NotEqual<string>(resp1.Code, resp2.Code)
     | _ -> Assert.True(false, "Expected Ok responses")
@@ -89,7 +89,7 @@ let ``shorten generates different codes`` () = task {
 let ``shorten with invalid URL returns error`` () = task {
     let store = createSuccessStore ()
     let request = createRequest "not-a-url" None None
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Error (InvalidRequest violations) -> Assert.NotEmpty(violations)
     | _ -> Assert.True(false, "Expected InvalidRequest error")
@@ -99,7 +99,7 @@ let ``shorten with invalid URL returns error`` () = task {
 let ``shorten with invalid alias returns error`` () = task {
     let store = createSuccessStore ()
     let request = createRequest "https://example.com" (Some "bad alias!") None
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Error (InvalidRequest violations) ->
         Assert.Contains(violations, fun v ->
@@ -112,7 +112,7 @@ let ``shorten with invalid alias returns error`` () = task {
 let ``shorten with zero TTL returns error`` () = task {
     let store = createSuccessStore ()
     let request = createRequest "https://example.com" None (Some 0)
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Error (InvalidRequest violations) -> Assert.NotEmpty(violations)
     | _ -> Assert.True(false, "Expected InvalidRequest error")
@@ -122,7 +122,7 @@ let ``shorten with zero TTL returns error`` () = task {
 let ``shorten with negative TTL returns error`` () = task {
     let store = createSuccessStore ()
     let request = createRequest "https://example.com" None (Some -100)
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Error (InvalidRequest violations) -> Assert.NotEmpty(violations)
     | _ -> Assert.True(false, "Expected InvalidRequest error")
@@ -132,7 +132,7 @@ let ``shorten with negative TTL returns error`` () = task {
 let ``shorten with multiple invalid fields returns multiple violations`` () = task {
     let store = createSuccessStore ()
     let request = createRequest "invalid-url" (Some "bad!") (Some -5)
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Error (InvalidRequest violations) ->
         Assert.True(violations.Length >= 2, "Expected multiple violations")
@@ -144,7 +144,7 @@ let ``shorten with multiple invalid fields returns multiple violations`` () = ta
 let ``shorten returns AliasTaken when alias exists`` () = task {
     let store = createAliasConflictStore "existing" "https://taken.com"
     let request = createRequest "https://example.com" (Some "existing") None
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Error (AliasTaken takenUrl) -> Assert.Equal("https://taken.com", takenUrl)
     | _ -> Assert.True(false, "Expected AliasTaken error")
@@ -154,7 +154,7 @@ let ``shorten returns AliasTaken when alias exists`` () = task {
 let ``shorten succeeds with available alias`` () = task {
     let store = createAliasConflictStore "taken" "https://taken.com"
     let request = createRequest "https://example.com" (Some "available") None
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Ok response -> Assert.Equal("available", response.Code)
     | Error _ -> Assert.True(false, "Expected Ok response")
@@ -165,7 +165,7 @@ let ``shorten succeeds with available alias`` () = task {
 let ``shorten returns StorageError on Get failure`` () = task {
     let store = createFailingStore "DB connection failed" 500
     let request = createRequest "https://example.com" (Some "test") None
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Error (StorageError msg) ->
         Assert.Contains("Error:", msg)
@@ -181,7 +181,7 @@ let ``shorten returns StorageError on Save failure`` () = task {
         Exists = fun _ -> Task.FromResult(Ok false)
     }
     let request = createRequest "https://example.com" None None
-    let! result = Service.shorten failingSave request
+    let! result = Service.shorten failingSave "http://localhost:8080" request
     match result with
     | Error (StorageError msg) -> Assert.Contains("Write failed", msg)
     | _ -> Assert.True(false, "Expected StorageError")
@@ -192,7 +192,7 @@ let ``shorten returns StorageError on Save failure`` () = task {
 let ``shorten persists to store and can be retrieved`` () = task {
     let store = Memory.create ()
     let request = createRequest "https://integration.example.com" (Some "inttest") None
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Ok _ ->
         let! getResult = store.Get "inttest"
@@ -206,7 +206,7 @@ let ``shorten persists to store and can be retrieved`` () = task {
 let ``shorten respects TTL expiration`` () = task {
     let store = Memory.create ()
     let request = createRequest "https://ttl.example.com" (Some "ttltest") (Some 1)
-    let! result = Service.shorten store request
+    let! result = Service.shorten store "http://localhost:8080" request
     match result with
     | Ok _ ->
         let! exists1 = store.Exists "ttltest"
@@ -225,7 +225,7 @@ let ``shorten handles concurrent requests`` () = task {
         createRequest "https://example2.com" (Some "alias2") None
         createRequest "https://example3.com" (Some "alias3") None
     ]
-    let! results = requests |> List.map (Service.shorten store) |> Task.WhenAll
+    let! results = requests |> List.map (Service.shorten store "http://localhost:8080") |> Task.WhenAll
     let successCount = results |> Array.filter (fun r -> r.IsOk) |> Array.length
     Assert.Equal(3, successCount)
 }

@@ -1,7 +1,6 @@
 module FsShortener.Shortener.Encoding
 
 open System.Net
-open FsShortener.Shortener.Domain
 
 let private chars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
 
@@ -31,20 +30,20 @@ let generateCode: unit -> string = fun () ->
     |> base62Encode
 
 type ResponseHeaders = (string * string) list
-let mapErrorToStatus: ShortenError -> (HttpStatusCode * ResponseHeaders * obj) = fun err ->
+let mapErrorToStatus: Domain.ShortenError -> (HttpStatusCode * ResponseHeaders * obj) = fun err ->
     match err with
-    | InvalidRequest violations ->
+    | Domain.InvalidRequest violations ->
         HttpStatusCode.BadRequest, 
         [("Content-Type", "application/json")],
         {|
             message = "Invalid request"
             violations = violations
         |}
-    | AliasTaken ->
+    | Domain.AliasTaken ->
         HttpStatusCode.Conflict, 
         [("Content-Type", "text/plain")], 
         "Alias already taken"
-    | ShortenError.RateLimited tryAgain -> 
+    | Domain.RateLimited tryAgain -> 
         HttpStatusCode.TooManyRequests,
         [
             "Content-Type", "text/plain";

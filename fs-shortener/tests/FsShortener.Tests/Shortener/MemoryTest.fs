@@ -13,23 +13,20 @@ let private unwrap result =
     | Ok value -> value
     | Error e -> failwithf "Unexpected error: %s" e.Message
 
-let private save (store: LinkStore) l =
-    async {
-        let! r = store.Save l
-        unwrap r
-    }
+let private save (store: LinkStore) l = task {
+    let! r = store.Save l
+    return unwrap r
+}
 
-let private get (store: LinkStore) code =
-    async {
-        let! r = store.Get code
-        return unwrap r
-    }
+let private get (store: LinkStore) code = task {
+    let! r = store.Get code
+    return unwrap r
+}
 
-let private exists (store: LinkStore) code =
-    async {
-        let! r = store.Exists code
-        return unwrap r
-    }
+let private exists (store: LinkStore) code = task {
+    let! r = store.Exists code
+    return unwrap r
+}
 
 // MemoryServer expires keys with second granularity
 let private waitForExpiry () = Task.Delay 1200
@@ -150,8 +147,8 @@ let ``Concurrent saves are all stored`` () = task {
     let! _ =
         codes
         |> List.map (fun c -> save store (link c ("https://example.com/" + c) None))
-        |> Async.Parallel
+        |> Task.WhenAll
 
-    let! results = codes |> List.map (exists store) |> Async.Parallel
+    let! results = codes |> List.map (exists store) |> Task.WhenAll
     Assert.All(results, fun r -> Assert.True(r))
 }

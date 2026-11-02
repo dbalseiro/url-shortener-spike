@@ -1,5 +1,7 @@
 module FsShortener.Shortener.Model
 
+open System.Threading.Tasks
+
 type Link = {
     Url: string
     Code: string
@@ -12,7 +14,7 @@ type Error = {
 }
 
 type LinkStore = {
-    Save: Link -> Async<Result<unit, Error>>
-    Get: string -> Async<Result<Link option, Error>>
-    Exists: string -> Async<Result<bool, Error>>
+    Save: Link -> Task<Result<unit, Error>>
+    Get: string -> Task<Result<Link option, Error>>
+    Exists: string -> Task<Result<bool, Error>>
 }

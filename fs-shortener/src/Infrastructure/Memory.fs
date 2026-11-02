@@ -7,7 +7,7 @@ module Memory =
     let create () : LinkStore =
         let store = MemoryServer()
         {
-            Save = fun link -> async {
+            Save = fun link -> task {
                 let key = link.Code
                 let value = link.Url
                 store.Set(key, value) 
@@ -21,7 +21,7 @@ module Memory =
                 else
                     return Ok ()
             }
-            Get = fun key -> async {
+            Get = fun key -> task {
                 let! result = store.Get key
                 let result = 
                     Option.map (
@@ -29,7 +29,7 @@ module Memory =
                     ) result
                 return Ok result
             }
-            Exists = fun key -> async {
+            Exists = fun key -> task {
                 let! result = store.Exists key
                 return Ok result
             }

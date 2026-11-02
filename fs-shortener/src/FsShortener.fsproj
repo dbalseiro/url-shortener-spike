@@ -5,7 +5,7 @@
       <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
 
-  <ItemGroup><Compile Include="Shortener/Domain.fs" /><Compile Include="Health/Domain.fs" />
+  <ItemGroup><Compile Include="Shortener/Domain.fs" /><Compile Include="Shortener/Validation.fs" /><Compile Include="Health/Domain.fs" />
     <Compile Include="Health/Routes.fs" />
     <Compile Include="App.fs" />
     <Compile Include="Program.fs" />

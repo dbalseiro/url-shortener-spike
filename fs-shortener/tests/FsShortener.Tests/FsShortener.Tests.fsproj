@@ -21,7 +21,7 @@
     <ProjectReference Include="..\..\src\FsShortener.fsproj" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup><Compile Include="Shortener/ValidationTest.fs" />
     <Compile Include="Integration/TestApp.fs" />
     <Compile Include="Integration/Health.fs" />
     <Compile Include="Health/TypesTest.fs" />

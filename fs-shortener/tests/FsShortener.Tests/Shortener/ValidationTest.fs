@@ -1,4 +1,4 @@
-module Shortener.ValidationTest
+module FsShortener.Tests.Shortener.ValidationTest
 
 open Xunit
 open FsShortener.Shortener.Validation
@@ -27,7 +27,7 @@ let ``validUrl returns Some for an unsupported scheme`` () =
 
 [<Fact>]
 let ``validAlias returns true for a valid alias`` () =
-    let result = validAlias "valid-alias123"
+    let result = validAlias "validalias123"
     Assert.True(result)
 
 [<Fact>]

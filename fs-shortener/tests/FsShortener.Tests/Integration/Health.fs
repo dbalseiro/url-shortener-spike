@@ -1,9 +1,10 @@
 [<Xunit.Trait("Category", "Integration")>]
-module Integration.Health
+module FsShortener.Tests.Integration.Health
 
 open Xunit
-open Integration.TestApp
 open System.Net
+
+open FsShortener.Tests.Integration.TestApp
 
 [<Fact>]
 let ``Health check returns OK`` () =

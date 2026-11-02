@@ -1,4 +1,4 @@
-module Integration.TestApp
+module FsShortener.Tests.Integration.TestApp
 
 open System.Net.Http
 open System.Threading.Tasks

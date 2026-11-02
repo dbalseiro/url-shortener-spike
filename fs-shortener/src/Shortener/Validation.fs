@@ -10,7 +10,7 @@ let validUrl : string -> string option = fun url ->
 
 let validAlias : string -> bool = fun alias ->
     not (System.String.IsNullOrWhiteSpace alias) 
-    && System.Text.RegularExpressions.Regex.IsMatch(alias, "^[a-zA-Z0-9-]+$") 
+    && System.Text.RegularExpressions.Regex.IsMatch(alias, "^[a-zA-Z0-9]+$") 
 
 let validTTL : int -> bool = fun ttl -> ttl > 0
 

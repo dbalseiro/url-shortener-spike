@@ -1,4 +1,4 @@
-module Health.TypesTest
+module FsShortener.Tests.Health.TypesTest
 
 open Xunit
 open FsShortener.Health.Domain

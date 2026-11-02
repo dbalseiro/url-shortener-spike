@@ -13,7 +13,6 @@ type ShortenError =
     | InvalidRequest of Violation list
     | AliasTaken
     | RateLimited of TryAgain
-    | NotFound
 
 type FetchError =
     | NotFound

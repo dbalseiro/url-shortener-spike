@@ -2,6 +2,19 @@ module FsShortener.Shortener.Service
 
 open System.Threading.Tasks
 
+let fetch
+    (store: Model.LinkStore)
+    (code: string)
+    : Task<Result<string, Domain.FetchError>> = task {
+        let! value = store.Get code
+        return match value with
+               | Error err -> Error ( err 
+                                    |> Model.storageErrorToString 
+                                    |> Domain.FetchError.StorageError
+                                    )
+               | Ok None -> Error Domain.FetchError.NotFound
+               | Ok (Some link) -> Ok link.Url
+    }
 let shorten 
     (store: Model.LinkStore) 
     (baseUrl: string)

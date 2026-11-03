@@ -20,6 +20,17 @@ let private mapShortenResponse
             | Domain.AliasTaken s -> Results.Conflict s
             | Domain.RateLimited s -> failwith "Not Implemented"
 
+let private mapFetchResponse
+    (result: Result<string, Domain.FetchError>)
+    : IResult =
+        match result with
+        | Ok url -> Results.Redirect url
+        | Error error ->
+            match error with
+            | Domain.FetchError.NotFound -> Results.NotFound()
+            | Domain.FetchError.StorageError s -> Results.BadRequest s
+            | Domain.FetchError.RateLimited s -> failwith "Not Implemented"
+
 let map (store: Model.LinkStore) (app: IEndpointRouteBuilder) =
     let group = app.MapGroup "/shorten"
 
@@ -29,5 +40,12 @@ let map (store: Model.LinkStore) (app: IEndpointRouteBuilder) =
             let! response = Service.shorten store baseUrl (Dto.Request.toDomain request)
             let result = Result.map Dto.Response.ofDomain response
             return mapShortenResponse result
+        }
+    )) |> ignore
+
+    group.MapGet("/{code}", Func<string, Task<IResult>>(
+        fun code -> task {
+            let! response = Service.fetch store code
+            return mapFetchResponse response
         }
     )) |> ignore

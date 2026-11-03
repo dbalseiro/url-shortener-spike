@@ -167,7 +167,7 @@ let ``shorten returns StorageError on Get failure`` () = task {
     let request = createRequest "https://example.com" (Some "test") None
     let! result = Service.shorten store "http://localhost:8080" request
     match result with
-    | Error (StorageError msg) ->
+    | Error (ShortenError.StorageError msg) ->
         Assert.Contains("Error:", msg)
         Assert.Contains("500", msg)
     | _ -> Assert.True(false, "Expected StorageError")
@@ -183,7 +183,7 @@ let ``shorten returns StorageError on Save failure`` () = task {
     let request = createRequest "https://example.com" None None
     let! result = Service.shorten failingSave "http://localhost:8080" request
     match result with
-    | Error (StorageError msg) -> Assert.Contains("Write failed", msg)
+    | Error (ShortenError.StorageError msg) -> Assert.Contains("Write failed", msg)
     | _ -> Assert.True(false, "Expected StorageError")
 }
 

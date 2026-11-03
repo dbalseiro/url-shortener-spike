@@ -5,7 +5,11 @@
       <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
   </PropertyGroup>
 
-  <ItemGroup><Compile Include="Shortener/Model.fs" /><Compile Include="Shortener/Domain.fs" /><Compile Include="Shortener/Validation.fs" /><Compile Include="Shortener/Dto.fs" /><Compile Include="Shortener/Encoding.fs" /><Compile Include="Shortener/Service.fs" /><Compile Include="Shortener/Routes.fs" /><Compile Include="Infrastructure/MemoryServer.fs" /><Compile Include="Infrastructure/Memory.fs" /><Compile Include="Health/Domain.fs" />
+  <ItemGroup>
+    <PackageReference Include="StackExchange.Redis" Version="2.7.27" />
+  </ItemGroup>
+
+  <ItemGroup><Compile Include="Shortener/Model.fs" /><Compile Include="Shortener/Domain.fs" /><Compile Include="Shortener/Validation.fs" /><Compile Include="Shortener/Dto.fs" /><Compile Include="Shortener/Encoding.fs" /><Compile Include="Shortener/Service.fs" /><Compile Include="Shortener/Routes.fs" /><Compile Include="Infrastructure/MemoryServer.fs" /><Compile Include="Infrastructure/Memory.fs" /><Compile Include="Infrastructure/Redis.fs" /><Compile Include="Health/Domain.fs" />
     <Compile Include="Health/Routes.fs" />
     <Compile Include="App.fs" />
     <Compile Include="Program.fs" />

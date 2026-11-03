@@ -17,6 +17,7 @@ type ShortenError =
 
 type FetchError =
     | NotFound
+    | StorageError of string
     | RateLimited of TryAgain
 
 type ShortenRequest = {

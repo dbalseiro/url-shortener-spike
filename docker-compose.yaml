@@ -9,8 +9,23 @@ services:
     restart: always
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
+      interval: 3s
+      timeout: 5s
       retries: 5
+
+  fs-shortener:
+    build:
+      context: ./fs-shortener
+    container_name: fs-shortener
+    ports:
+      - "8080:8080"
+    environment:
+      USE_REDIS: "true"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
 
 

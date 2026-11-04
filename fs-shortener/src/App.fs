@@ -27,6 +27,7 @@ let private scriptArgs (cfg: IConfiguration): string list =
     [ 
       stringOrDefault "10" "rate-limiter:params:maxTokens"
       stringOrDefault "1" "rate-limiter:params:tokensPerSecond"
+      DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString()
       stringOrDefault "60" "rate-limiter:params:windowSeconds"
     ] 
 

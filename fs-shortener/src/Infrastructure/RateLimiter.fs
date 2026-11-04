@@ -9,7 +9,7 @@ type RateLimitMiddleware(next: RequestDelegate, store: Model.LinkStore, script: 
                        | ip -> ip.ToString()
         match! store.ExecuteScript (script clientIp) with
         | Ok status -> 
-            if status = 0
+            if status = 1
             then do! next.Invoke context
             else 
                 context.Response.Headers.["Retry-After"] <- "60"

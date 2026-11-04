@@ -7,6 +7,8 @@ RUN dotnet restore src/FsShortener.fsproj
 COPY src/ src/
 RUN dotnet publish src/FsShortener.fsproj -c Release -o /app --no-restore
 
+COPY scripts/rate-limiter.lua /app
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app .

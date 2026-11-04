@@ -36,7 +36,7 @@ type Api<'a> = HttpClient -> Task<'a>
 let private run (test: Api<unit>) : Task = task {
     let builder = WebApplication.CreateBuilder()
     builder.WebHost.UseTestServer() |> ignore
-    let app = FsShortener.App.configure builder
+    let app = FsShortener.App.configure builder ""
     do! app.StartAsync()
     try
         do! test (app.GetTestClient())

@@ -2,6 +2,7 @@ module FsShortener.Shortener.Routes
 
 open System
 open System.Threading.Tasks
+open FsShortener.Infrastructure.Model
 
 open Microsoft.AspNetCore.Routing
 open Microsoft.AspNetCore.Builder
@@ -31,7 +32,7 @@ let private mapFetchResponse
             | Domain.FetchError.StorageError s -> Results.BadRequest s
             | Domain.FetchError.RateLimited s -> failwith "Not Implemented"
 
-let map (store: Model.LinkStore) (app: IEndpointRouteBuilder) =
+let map (store: LinkStore) (app: IEndpointRouteBuilder) =
     let group = app.MapGroup "/shorten"
 
     group.MapPost("", Func<Dto.ShortenRequestDto, HttpContext, Task<IResult>>(

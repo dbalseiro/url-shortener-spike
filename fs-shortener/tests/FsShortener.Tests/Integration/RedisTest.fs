@@ -4,7 +4,7 @@ open System
 open System.Threading.Tasks
 open Xunit
 open FsShortener.Infrastructure
-open FsShortener.Shortener.Model
+open FsShortener.Infrastructure.Model
 
 [<Fact>]
 let ``Redis can save and retrieve a link`` () : Task =

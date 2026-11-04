@@ -2,21 +2,23 @@ module FsShortener.Shortener.Service
 
 open System.Threading.Tasks
 
+open FsShortener.Infrastructure.Model
+
 let fetch
-    (store: Model.LinkStore)
+    (store: LinkStore)
     (code: string)
     : Task<Result<string, Domain.FetchError>> = task {
         let! value = store.Get code
         return match value with
                | Error err -> Error ( err 
-                                    |> Model.storageErrorToString 
+                                    |> storageErrorToString 
                                     |> Domain.FetchError.StorageError
                                     )
                | Ok None -> Error Domain.FetchError.NotFound
                | Ok (Some link) -> Ok link.Url
     }
 let shorten 
-    (store: Model.LinkStore) 
+    (store: LinkStore) 
     (baseUrl: string)
     (request: Domain.ShortenRequest)
     : Task<Result<Domain.ShortenResponse, Domain.ShortenError>> = task {
@@ -26,13 +28,13 @@ let shorten
             let alias = Option.defaultWith Encoding.generateCode request.Alias
             let! value = store.Get alias
             match value with
-            | Error err -> return Error (Domain.StorageError (Model.storageErrorToString err))
+            | Error err -> return Error (Domain.StorageError (storageErrorToString err))
             | Ok (Some link) -> return Error (Domain.AliasTaken link.Url)
             | Ok None ->
-                let link = { Model.Url = request.Url; Model.Code = alias; Model.Expiration = request.TTL }
+                let link = { Url = request.Url; Code = alias; Expiration = request.TTL }
                 let! saveResult = store.Save link
                 match saveResult with
-                | Error err -> return Error (Domain.StorageError (Model.storageErrorToString err))
+                | Error err -> return Error (Domain.StorageError (storageErrorToString err))
                 | Ok () -> return Ok { 
                     Domain.Code = alias
                     Domain.ShortUrl = baseUrl.TrimEnd('/') + "/" + alias

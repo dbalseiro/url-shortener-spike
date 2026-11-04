@@ -1,10 +1,10 @@
 namespace FsShortener.Infrastructure
 
 open FsShortener.Infrastructure.MemoryServer
-open FsShortener.Shortener.Model
 
 module Memory = 
-    let create () : LinkStore =
+    open System.Threading.Tasks
+    let create () : Model.LinkStore =
         let store = MemoryServer()
         {
             Save = fun link -> task {
@@ -15,7 +15,7 @@ module Memory =
                     let ttl = link.Expiration.Value
                     let! result = store.Expire(key, ttl)
                     if not result then
-                        return Error { Message = "Failed to set expiration"; ErrorCode = 1 }
+                        return Error { Model.Message = "Failed to set expiration"; Model.ErrorCode = 1 }
                     else
                         return Ok ()
                 else
@@ -25,7 +25,7 @@ module Memory =
                 let! result = store.Get key
                 let result = 
                     Option.map (
-                        fun value -> { Code = key; Url = value; Expiration = None }
+                        fun value -> { Model.Code = key; Model.Url = value; Model.Expiration = None }
                     ) result
                 return Ok result
             }
@@ -33,4 +33,5 @@ module Memory =
                 let! result = store.Exists key
                 return Ok result
             }
+            ExecuteScript = fun _ -> Task.FromResult(Ok 0)
         }

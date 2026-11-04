@@ -4,9 +4,9 @@ open System
 open System.Threading.Tasks
 open Xunit
 open FsShortener.Shortener
-open FsShortener.Shortener.Model
 open FsShortener.Shortener.Domain
 open FsShortener.Infrastructure
+open FsShortener.Infrastructure.Model
 
 let private createRequest url alias ttl =
     { Url = url; Alias = alias; TTL = ttl }
@@ -19,6 +19,7 @@ let private createSuccessStore () : LinkStore =
         Save = fun _ -> Task.FromResult(Ok ())
         Get = fun _ -> Task.FromResult(Ok None)
         Exists = fun _ -> Task.FromResult(Ok false)
+        ExecuteScript = fun _ -> Task.FromResult(Ok 0)
     }
 
 let private createFailingStore (errorMsg: string) (code: int) : LinkStore =
@@ -26,6 +27,7 @@ let private createFailingStore (errorMsg: string) (code: int) : LinkStore =
         Save = fun _ -> Task.FromResult(Error (createStorageError errorMsg code))
         Get = fun _ -> Task.FromResult(Error (createStorageError errorMsg code))
         Exists = fun _ -> Task.FromResult(Error (createStorageError errorMsg code))
+        ExecuteScript = fun _ -> Task.FromResult(Error (createStorageError errorMsg code))
     }
 
 let private createAliasConflictStore (alias: string) (url: string) : LinkStore =
@@ -37,6 +39,7 @@ let private createAliasConflictStore (alias: string) (url: string) : LinkStore =
             else
                 Task.FromResult(Ok None)
         Exists = fun _ -> Task.FromResult(Ok false)
+        ExecuteScript = fun _ -> Task.FromResult(Ok 0)
     }
 
 // Valid requests
@@ -179,6 +182,7 @@ let ``shorten returns StorageError on Save failure`` () = task {
         Save = fun _ -> Task.FromResult(Error (createStorageError "Write failed" 503))
         Get = fun _ -> Task.FromResult(Ok None)
         Exists = fun _ -> Task.FromResult(Ok false)
+        ExecuteScript = fun _ -> Task.FromResult(Ok 0)
     }
     let request = createRequest "https://example.com" None None
     let! result = Service.shorten failingSave "http://localhost:8080" request

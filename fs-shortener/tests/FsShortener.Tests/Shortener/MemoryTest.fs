@@ -3,7 +3,7 @@ module FsShortener.Tests.Shortener.MemoryTest
 open System.Threading.Tasks
 open Xunit
 open FsShortener.Infrastructure
-open FsShortener.Shortener.Model
+open FsShortener.Infrastructure.Model
 
 let private link code url expiration =
     { Code = code; Url = url; Expiration = expiration }
@@ -126,7 +126,7 @@ let ``Links with different codes are independent`` () = task {
     let! a = get store "a"
     let! b = get store "b"
     Assert.Equal("https://a.example", a.Value.Url)
-    Assert.True(b.IsNone)
+    Assert.True b.IsNone
 }
 
 [<Fact>]
